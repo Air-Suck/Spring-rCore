@@ -1,0 +1,3 @@
+cargo:rerun-if-changed=../user/src/
+cargo:rerun-if-changed=../user/build/elf/
+app_0: ch3_taskinfo
