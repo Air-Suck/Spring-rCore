@@ -1,0 +1,11 @@
+cargo:rerun-if-changed=../user/src/
+cargo:rerun-if-changed=../user/build/elf/
+app_0: ch3_sleep
+app_1: ch3_sleep1
+app_2: ch3_taskinfo
+app_3: ch4_mmap0
+app_4: ch4_mmap1
+app_5: ch4_mmap2
+app_6: ch4_mmap3
+app_7: ch4_unmap
+app_8: ch4_unmap2
