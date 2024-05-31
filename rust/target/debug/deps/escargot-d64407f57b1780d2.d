@@ -1,0 +1,15 @@
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/libescargot-d64407f57b1780d2.rmeta: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/lib.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/build.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/cargo.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/msg.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/run.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/error.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/mod.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/diagnostic.rs /home/shinuohui/code/Spring-rCore/rust/target/debug/build/escargot-f0a7504263d358e8/out/current_target.txt
+
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/escargot-d64407f57b1780d2.d: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/lib.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/build.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/cargo.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/msg.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/run.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/error.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/mod.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/diagnostic.rs /home/shinuohui/code/Spring-rCore/rust/target/debug/build/escargot-f0a7504263d358e8/out/current_target.txt
+
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/lib.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/build.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/cargo.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/msg.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/run.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/error.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/mod.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/escargot-0.4.0/src/format/diagnostic.rs:
+/home/shinuohui/code/Spring-rCore/rust/target/debug/build/escargot-f0a7504263d358e8/out/current_target.txt:
+
+# env-dep:OUT_DIR=/home/shinuohui/code/Spring-rCore/rust/target/debug/build/escargot-f0a7504263d358e8/out
