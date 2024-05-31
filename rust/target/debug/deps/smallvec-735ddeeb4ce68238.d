@@ -1,0 +1,5 @@
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/libsmallvec-735ddeeb4ce68238.rmeta: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/smallvec-1.11.0/src/lib.rs
+
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/smallvec-735ddeeb4ce68238.d: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/smallvec-1.11.0/src/lib.rs
+
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/smallvec-1.11.0/src/lib.rs:

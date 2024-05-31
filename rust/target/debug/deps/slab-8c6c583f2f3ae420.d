@@ -1,0 +1,6 @@
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/libslab-8c6c583f2f3ae420.rmeta: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/lib.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/builder.rs
+
+/home/shinuohui/code/Spring-rCore/rust/target/debug/deps/slab-8c6c583f2f3ae420.d: /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/lib.rs /home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/builder.rs
+
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/lib.rs:
+/home/shinuohui/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/slab-0.4.8/src/builder.rs:
