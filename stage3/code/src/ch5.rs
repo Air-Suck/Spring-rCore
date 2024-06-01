@@ -20,12 +20,13 @@ pub fn generator_exp2() {
 pub fn generator_exp3() {
     let mut gen = GeneratorA::start();
     let mut gen2 = GeneratorA::start();
-
     if let GeneratorState::Yielded(n) = gen.resume() {
         println!("Got value {}", n);
     }
-
+    // println!("the size of GeneratorA is {}", std::mem::size_of::<GeneratorA>());
+    
     std::mem::swap(&mut gen, &mut gen2); // <--- Big problem!
+    
 
     if let GeneratorState::Yielded(n) = gen2.resume() {
         println!("Got value {}", n);
