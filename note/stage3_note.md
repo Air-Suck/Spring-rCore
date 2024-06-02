@@ -1850,6 +1850,7 @@ struct Reactor {
     // 这两个成员是用来注册的？看英文的意思好像是这样的。先往下看
     // 这么看的话注册的时候就已经将任务交给一个线程来执行了，并且将这个在线程上任务的执行结果抽象为Event
     dispatcher: Sender<Event>,
+    // 这个代表的是join的返回值，也可以理解为是线程的返回值
     handle: Option<JoinHandle<()>>,
 
     // This is a list of tasks
@@ -1866,7 +1867,6 @@ enum Event {
 }
 
 impl Reactor {
-
     // We choose to return an atomic reference counted, mutex protected, heap
     // allocated `Reactor`. Just to make it easy to explain... No, the reason
     // we do this is:
@@ -1874,7 +1874,11 @@ impl Reactor {
     // 1. We know that only thread-safe reactors will be created.
     // 2. By heap allocating it we can obtain a reference to a stable address
     // that's not dependent on the stack frame of the function that called `new`
+    // 就是说这里是将Reactor包装在了一个box、mutex、arc里面，主要的目的就是让Reactor线程安全
+    // 因为Reactor需要被多个线程获取（最少有执行器线程吧，里面要调用poll）;还有一个原因就是让
+    // Reactor的生命周期能够被我们自己通过arc来管理，而不是被函数栈帧影响
     fn new() -> Arc<Mutex<Box<Self>>> {
+        // 这里是通过Channel来实现不同线程间的通信的，Reactor是信息的发送方
         let (tx, rx) = channel::<Event>();
         let reactor = Arc::new(Mutex::new(Box::new(Reactor {
             dispatcher: tx,
@@ -1885,30 +1889,52 @@ impl Reactor {
         // Notice that we'll need to use `weak` reference here. If we don't,
         // our `Reactor` will not get `dropped` when our main thread is finished
         // since we're holding internal references to it.
-
+		// 这里使用的是虚指针，因为在spawn线程的时候会出现move，所以如果不使用weak的话就会导致
+        // spawn出来的线程也会增加引用计数，而主函数也持有一个引用计数，这样的话就有可能主函数
+        // 或者说主线程结束了之后，spawn出来的线程还没有结束，就导致Reactor没有被释放。更严重的
+        // 是如果spawn出来的线程被锁住了，那么就会导致Reactor这一段的内存泄漏了
         // Since we're collecting all `JoinHandles` from the threads we spawn
         // and make sure to join them we know that `Reactor` will be alive
         // longer than any reference held by the threads we spawn here.
+        // 这句话也要结合上面的那段话来看。上面的那段话主要说的意思就是，Reactor的生命周期在主线程
+        // 结束的时候结束，并不会受到Reactor自己线程的影响（但实际上应该受到Reactorspawn出来的
+        // 任务线程的影响。因为任务线程中必须持有一个Reactor）;而下面这一段话说的是，因为在Reacto
+        // 线程中join了所有的任务线程，所以就会使得所有的线程的生命周期（姑且叫生命周期）都会比
+        // Reactor线程的生命周期短。而当所有的任务的线程都执行结束了之后由于Reactor线程并没有占有
+        // 一个Reactor的引用计数，而主线程占有一个Reactor的引用计数，所以只会在主线程退出的时候才会
+        // 将Reactor销毁。
+        // 或者换一句话说，这里就是不希望Reactor线程中占有一个引用计数而导致Reactor内存泄漏
         let reactor_clone = Arc::downgrade(&reactor);
 
         // This will be our Reactor-thread. The Reactor-thread will in our case
         // just spawn new threads which will serve as timers for us.
+        // 可以发现Reactor自己是另一个线程，在他的线程中就负责去spawn其他的线程来执行任务了
+        // 并且需要注意的是，这里并没有使用join，所以相当于只是创建出了一个Reactor线程，剩下
+        // 的事就交给Reactor线程自己完成了，主线程并不会等待执行器线程
         let handle = thread::spawn(move || {
             let mut handles = vec![];
 
             // This simulates some I/O resource
+            // 当rx没有值的时候，Reactor线程会阻塞在这个位置
             for event in rx {
                 println!("REACTOR: {:?}", event);
                 let reactor = reactor_clone.clone();
+                // 根据传来的event来判断是否有任务需要执行
                 match event {
+                    // 只有当决定关闭Reactor时才会Reactor线程才会退出spawn循环
                     Event::Close => break,
                     Event::Timeout(duration, id) => {
-
                         // We spawn a new thread that will serve as a timer
                         // and will call `wake` on the correct `Waker` once
                         // it's done.
+                        // 创建一个线程来执行一个任务（或者说叶子fut）
                         let event_handle = thread::spawn(move || {
+                            // 模拟执行任务
                             thread::sleep(Duration::from_secs(duration));
+                            // 任务执行结束，通过唤醒器将该任务的执行器唤醒
+                            // 需要注意的是这里一定要将虚指针升级为arc之后
+                            // 才能调用Reactor的方法。
+                            // 并且线程返回之后线程所占有的引用计数马上就会被销毁
                             let reactor = reactor.upgrade().unwrap();
                             reactor.lock().map(|mut r| r.wake(id)).unwrap();
                         });
@@ -1920,22 +1946,30 @@ impl Reactor {
             // This is important for us since we need to know that these
             // threads don't live longer than our Reactor-thread. Our
             // Reactor-thread will be joined when `Reactor` gets dropped.
+            // 这里就是在收集所有的handle，以保证Reactor线程的生命周期比所有的任务
+            // 线程的生命周期都长，也就是当所有任务线程执行结束了之后才会Reactor才会
+            // 返回
             handles.into_iter().for_each(|handle| handle.join().unwrap());
         });
+        // 只是返回了Reactor的handle，并没有阻塞
         reactor.lock().map(|mut r| r.handle = Some(handle)).unwrap();
         reactor
     }
 
     // The wake function will call wake on the waker for the task with the
     // corresponding id.
+    // Reactor用的wake函数，根据任务id来唤醒对应的执行器,并且将fut的状态设置为ready
+    // 这里特别指的是fut
     fn wake(&mut self, id: usize) {
         self.tasks.get_mut(&id).map(|state| {
-
             // No matter what state the task was in we can safely set it
             // to ready at this point. This lets us get ownership over the
             // the data that was there before we replaced it.
             match mem::replace(state, TaskState::Ready) {
+                // 对一个NotReady的任务使用了wake的话就需要将任务的状态置为Ready
                 TaskState::NotReady(waker) => waker.wake(),
+                // 如果一个协程已经被poll过并且已经执行结束了,状态就会是finish
+     			// 而这里由于只针对叶子而言，所以一个任务只可能被唤醒一次
                 TaskState::Finished => panic!("Called 'wake' twice on task: {}", id),
                 _ => unreachable!()
             }
@@ -1944,6 +1978,7 @@ impl Reactor {
 
     // Register a new task with the reactor. In this particular example
     // we panic if a task with the same id get's registered twice
+    // 从这里可以看见，每次有一个任务注册时候就要会去spawn一个线程来做任务相关的事情
     fn register(&mut self, duration: u64, waker: Waker, id: usize) {
         if self.tasks.insert(id, TaskState::NotReady(waker)).is_some() {
             panic!("Tried to insert a task with id: '{}', twice!", id);
@@ -1952,6 +1987,7 @@ impl Reactor {
     }
 
     // We simply checks if a task with this id is in the state `TaskState::Ready`
+    // 直接根据任务的id在Reactor中查询相关任务的状态
     fn is_ready(&self, id: usize) -> bool {
         self.tasks.get(&id).map(|state| match state {
             TaskState::Ready => true,
@@ -1962,29 +1998,43 @@ impl Reactor {
 
 impl Drop for Reactor {
     fn drop(&mut self) {
-        // We send a close event to the reactor so it closes down our reactor-thread.
-        // If we don't do that we'll end up waiting forever for new events.
-        self.dispatcher.send(Event::Close).unwrap();
+        // 在第七章中这里多了一个发送Close的操作，但是实际上在主函数中已经实现了发送close
+        // drop函数只会在Reactor的引用计数为0（主线程结束）的时候才会执行。但是在这个例子中
+        // 在Reactor对象drop之前，Reactor线程就已经结束了。这是在block_on中实现的。因为block_on
+        // 之中会一直循环等待直到当前的主fut能够结束。而主fut结束的话就代表着所有的叶子fut都已经结束
+        // 也就是Reactor线程已经结束。并且主fut结束一定代表着所有的叶子fut都结束，但是叶子fut全部
+        // 结束并不代表主fut结束。所以这里的join其实没有什么必要，但是总是保险一点。
         self.handle.take().map(|h| h.join().unwrap()).unwrap();
     }
 }
 ```
 
+这里有一段话：
 
+> Instead of `yielding` a value we pass in, we yield the result of calling `poll` on the next `Future` we're awaiting.
 
+这里其实作者也说了，在生成器中yield返回了一个值，而在这里就是返回子fut poll的值，所以就是所有的状态机就是一个树状的调用结构，上一层的poll的返回值就是下一层poll的返回值，所以最上层poll的返回值是由最下层的poll的返回值决定的。而最下层的fut的执行又是交给Reactor来spawn线程进而来执行这个任务。所以最底层的fut的状态又是完全由Reactor来控制的（通过在叶子结束的时候调用wake函数，然后将任务的状态替换为ready并且将执行器线程唤醒）
 
+也就是文章中的这段话：
 
+> Instead of `yielding` a value we pass in, we yield the result of calling `poll` on the next `Future` we're awaiting.
 
+所以总的来说，真正要手动写的东西就是叶子fut的poll、运行时以及waker，而编译器会自动帮我实现非叶子的fut的poll函数。
 
+关于更先进的运行时：[more advanced runtimes](https://web.archive.org/web/20230202235603/https://cfsamson.github.io/books-futures-explained/conclusion.html#building-a-better-exectuor)
 
-
-
-
-
-
-
-
-
+之后有时间可以看看
 
 **疑问**为什么要avoid thread::park? ——这里有一篇文章 [a proper way to park our thread](https://web.archive.org/web/20230202235603/https://cfsamson.github.io/books-futures-explained/6_future_example.html#bonus-section---a-proper-way-to-park-our-thread)
 
+本质上这个park和unpark就是为了实现同步而存在的一些东西，所以这里作者说的是可以通过crossbeam::sync::Parker以及条件变量、互斥量来实现这个功能（从包名上也能看出这个就是用来实现同步的）
+
+关于条件变量的知识我还没有，这里就先**埋个坑**，之后可以回来看看
+
+单纯从代码上来看的话就相当于是通过锁来阻塞当前线程。刚刚初始化的时候里面的锁变量就是true，然后在第一次park的时候就不循环并将锁置为false，这样的话会将挂起操作之后到下一次park中。
+
+当然这里跟直接调用thread::park有什么区别我暂时还不知道，因为没有了解过thread::park，之后可以去看看。再**埋个坑**。
+
+至此，200行算是看完了。
+
+## 第三周
