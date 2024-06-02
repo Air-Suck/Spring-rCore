@@ -32,10 +32,8 @@ pub fn generator_exp3() {
         println!("Got value {}", n);
     }
     
-    // //感觉这行代码应该是放在这里的
-    // std::mem::swap(&mut gen, &mut gen2); // <--- Big problem!
     // //在这里进行swap就不会出现问题
-
+    // std::mem::swap(&mut gen, &mut gen2); // <--- Big problem!
 
     // This would now start gen2 since we swapped them.
     if let GeneratorState::Complete(()) = gen.resume() {
