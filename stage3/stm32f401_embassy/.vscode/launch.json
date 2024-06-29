@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "J-Link Cortex-M4 Debug",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}",
+      "executable": "${workspaceRoot}/target/thumbv7em-none-eabi/release/stm32f401_embassy",
+      "device": "STM32F401RE",
+      "interface": "swd",
+      "svdFile": "${workspaceRoot}/STM32F401.svd",
+      "runToEntryPoint": "main",
+      "gdbPath": "/usr/bin/gdb-multiarch",
+      "rttConfig": {
+        "enabled": true,
+        "address": "auto"
+      }
+    },
+    {
+      "name": "openocd JLink",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "openocd",
+      "cwd": "${workspaceRoot}",
+      "executable": "${workspaceRoot}/target/thumbv7em-none-eabi/release/stm32f401_embassy",
+      "device": "STM32F401RE",
+      "configFiles": [
+        "${workspaceRoot}/script/jlink.cfg",
+        "${workspaceRoot}/script/stm32f4x.cfg"
+      ],
+      "svdFile": "${workspaceRoot}/STM32F401.svd",
+      "runToEntryPoint": "main",
+      "gdbPath": "/usr/bin/gdb-multiarch"
+    },
+  ]
+}

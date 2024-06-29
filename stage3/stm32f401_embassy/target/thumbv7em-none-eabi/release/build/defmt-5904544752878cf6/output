@@ -1,0 +1,3 @@
+cargo:rustc-link-search=/home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/target/thumbv7em-none-eabi/release/build/defmt-5904544752878cf6/out
+cargo:rustc-check-cfg=cfg(c_variadic)
+cargo:rustc-check-cfg=cfg(no_cas)
