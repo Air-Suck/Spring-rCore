@@ -1,0 +1,5 @@
+cargo:rustc-cfg=cortex_m
+cargo:rustc-cfg=armv7m
+cargo:rustc-link-search=/home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/target/thumbv7em-none-eabi/release/build/cortex-m-rt-3c3a9956d02808db/out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=link.x.in

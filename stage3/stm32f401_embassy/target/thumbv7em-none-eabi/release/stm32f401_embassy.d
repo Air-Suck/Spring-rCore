@@ -1,0 +1,1 @@
+/home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/target/thumbv7em-none-eabi/release/stm32f401_embassy: /home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/build.rs /home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/src/fmt.rs /home/shinuohui/code/Spring-rCore/stage3/stm32f401_embassy/src/main.rs
