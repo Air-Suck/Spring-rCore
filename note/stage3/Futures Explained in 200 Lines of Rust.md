@@ -1,60 +1,10 @@
-# stage3
+# Futures Explained in 200 Lines of Rust
 
-## 环境配置
-
-今天是5.22。一直以为第三阶段是在六月份才开始的，所以这两天一直在赶学校的作业，一直没有碰第三阶段。。。
-
-在正式进入第三阶段前，我打算先配置一下虚拟机的远程连接，因为VMware实在是太卡了，但是环境都配置在上面又不得不使用虚拟机，就只能尝试一下同学建议的远程连接了
-
-主要参考：[vscode远程连接](https://blog.csdn.net/qq_29856169/article/details/115489702)
-
-主要步骤如下：
-
-- vscode 安装Remote-Developoment并配置
-- Linux 安装 OpenSSH-Server 并配置
-- 编写 vscode 的 ssh 配置文件
-
-里面有一条指令我觉得很有意思：
-
-```shell
-sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup # 备份
-```
-
-竟然可以直接使用cp命令生成备份文件
-
-### 坑点
-
-- 博主说的Remote-SSH版本其实没有问题，可能之后修复了
-
-- 出现Failed to find a non-Windows SSH installed只需要按照提示的要去去关闭相应的配置即可。打开打开“文件->首选项->设置"，然后取消勾选下面的选项即可
-
-  ![img](https://img-blog.csdnimg.cn/20200422192153207.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzI3NzI3MTQ3,size_16,color_FFFFFF,t_70)
-
-- 安装结束之后还有一个很麻烦的地方就是每次远程连接都要去输密码。只要在虚拟机上的~/.ssh/authorized_keys文件中添加Windows的ssh公钥即可实现免密登录。
-
-### 注意点
-
-- ```shell
-  type %USERPROFILE%\.ssh\id_rsa.pub
-  ```
-
-  这个指令可以查看ssh密钥。
-
-  之前对ssh密钥的理解也不太深入。这个密钥看样子是和机器绑定的。所以如果将本机的ssh公钥放在github上，那么使用ssh进行clone的时候就会去检查github上已有的密钥是否与本机ssh密钥匹配。匹配成功了才会允许进行clone
-
-- 关于rust-analyzer，他是通过识别当前工作区下面的Cargo.toml文件来提供rsut的语言分析的，所以如果出现当前工作区的toml文件并没有在rust-analyzer的工作区中，就会出现无法分析的情况
-
-## 第一周
-
-进入快乐的看文档学习时间。按照ppt上的文档顺序往下看吧
-
-### Rust Futures
-
-主要文档：[200⾏代码讲透RUST FUTURES](https://stevenbai.top/rust/futures_explained_in_200_lines_of_rust/#%E7%BA%BF%E7%A8%8B)
+主要文档：[200⾏代码讲透RUST FUTURES](https://web.archive.org/web/20230324130904/https://cfsamson.github.io/books-futures-explained/)
 
 我的笔记永远都非常杂乱无章。在这里我就简单按照章节，然后记录一些我遇到的有意思的点和问题
 
-#### 二 背景资料
+## 一 背景资料
 
 - 忘记move关键字是干嘛用的了。。
 
@@ -137,17 +87,17 @@ sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup # 备份
 
   由于我之前没有深入学过js，只是知道一些基本的语法，所以就只能不求甚解了
 
-#### 三 Rust中的Futures
+## 二 Rust中的Futures
 
-##### Future的三个阶段
+### Future的三个阶段
 
 -  轮询阶段(The Poll phase). 一个Future（也就是协程）被轮询后,会开始执行,直到被阻塞. 我们经常把轮询一个Future这部分称之为**执行器**(executor) 
-- 等待阶段. 事件源(通常称为reactor)注册等待一个事件发生，并确保当该事件准备好时唤醒相应的Future
-- 唤醒阶段. 事件发生,相应的Future被唤醒。
+-  等待阶段. 事件源(通常称为reactor)注册等待一个事件发生，并确保当该事件准备好时唤醒相应的Future
+-  唤醒阶段. 事件发生,相应的Future被唤醒。
 
 所以就相当于是rust**在语言层面实现了一个轮询调度器**
 
-##### Leaf futures与non Leaf futures
+### Leaf futures与non Leaf futures
 
 future是一个协程，他的返回值相当于是一个异步信号，就是当前异步代码块等待的“未来”
 
@@ -158,7 +108,7 @@ future是一个协程，他的返回值相当于是一个异步信号，就是�
   - **leaf代表的是一个资源**，而**non leaf代表**并不是一个资源，而更像**是一个资源的集合**，或者是对资源的一组操作。
   - non leaf 能够将控制权交给运行时的调度程序（当在一个non leaf中使用了await的时候就相当于是将控制权交给了调度器），而leaf不行。这也是为什么异步块一般都是一个non leaf future
 
-##### 运行时
+### 运行时
 
 在文档中并没有介绍什么是运行时。实际上这里将的运行时应该是指程序的**运行时环境**
 
@@ -175,7 +125,7 @@ copilot给出的解释是：
 >
 > 而Reactor则负责在Future需要等待某个事件（如I/O操作完成）时将它们**挂起**，并在事件发生时**唤醒**它们。
 
-##### rust标准库的支持
+rust标准库的支持
 
 - 一个公共接口，`Future trait`
 - 一个符合人体工程学的方法创建任务, 可以通过**async**和**await**关键字进行**暂停**和**恢复**`Future`
@@ -183,7 +133,7 @@ copilot给出的解释是：
 
 **疑问**Waker接口与await有什么区别？应该都是唤醒协程吧
 
-##### I/O密集型 VS CPU密集型任务
+### I/O密集型 VS CPU密集型任务
 
 这里有一句话与一段代码：
 
@@ -218,7 +168,6 @@ let non_leaf = async {
 解决执行器和分析器之间的矛盾（或者说解决执行器阻塞）有下面三个方法：
 
 - > 我们可以创建一个新的`leaf future`，它将我们的任务发送到另一个**线程**（而不是协程，如果是协程的话就跟上面没有区别了，因为执行器还是会在新建的协程中卡住），并在任务完成时解析。 我们可以像等待其他Future一样等待这个`leaf-future`。 
-  >
 
   **这个的意思就相当于是把CPU密集型任务交给了另一个线程来处理，然后在当前的异步块中去等待这个future。这样执行器就会在等待这个CPU密集型任务处理时转去执行其他的协程，就能进一步提高并发度。所以一般的逻辑应该是CPU密集型的任务不应该由协程来执行（因为会导致执行器阻塞），而应该交给线程来执行**
 
@@ -258,15 +207,155 @@ let non_leaf = async {
 - 执行器遇到阻塞任务时需要使用await关键字，以保证执行器线程不会等待当前的阻塞事件
 - 阻塞事件包括计算密集和阻塞IO
 
-#### 四 唤醒器和上下文
+## 三 Future与运行时工作模型
 
-到这里是在是看不下去中文版的了，感觉有点机翻的意思，太难懂了，所以选择直接去看英文原文。。。
+这一章还是很有必要看的，因为能让我有一个整体的把握。后面去学唤醒器啥的也会有底。
 
-[原文](https://web.archive.org/web/20230203001355/https://cfsamson.github.io/books-futures-explained/introduction.html)
+这一章主要是将伪代码和图形结合起来，来介绍Future与运行时的工作模型。
 
-##### 唤醒器
+下面就介绍一下异步模型的全过程
 
-##### Understanding the Waker
+- 阻塞当前线程
+
+  ![image-20240531113946000](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531113946000.png)
+
+  这里是通过执行器的block_on方法将当前线程阻塞了。意思是当等到了fut之后，当前线程才会继续执行
+
+- 生成状态机
+
+  ![image-20240531114145401](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531114145401.png)
+
+  编译器会根据async关键字和await关键字生成一个状态机（这个状态机的状态转换条件就是await事件的发生）
+
+- 执行future（也就是尝试执行传入的这个future）
+
+  ![image-20240531114303558](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531114303558.png)
+
+  这里是通过调用fut的方法来进行轮询。这里还需要传递一个唤醒器，以便这个fut能被唤醒（在等待阻塞事件的时候）。
+
+  这里说到的不能像一个实例方法一样去直接调用poll方法，是因为poll方法的函数签名如下：
+
+  ```rust
+  fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>; 
+  ```
+
+  这里的self并不是fut本身，而是要把fut包装在Pin中（所以不能直接调用实例方法）；而唤醒器也是要包装在一个Context中的（下面也提到了，这里需要一些额外的信息，来唤醒fut。就后好像是进程切换的时候的上下文一样，是fut恢复所需要的一些额外的信息）。所以这里不能这样使用non_leaf_fut.poll（waker）。
+
+  这里还提到了waker。这里的意思应该是poll函数会先把这个waker挂起，然后当这个fut到达了await点的时候，这个时候才会执行上面提到的non_leaf_fut.poll（waker）。
+
+  这个意思应该是，如果代码是非阻塞的就先不需要管这个waker了，一直执行到需要阻塞的地方了之后才会开始进行waker相关的部分。
+
+  这里再稍微提一下poll的作用：
+
+  > 在Rust中，`Future::poll`方法用于尝试驱动`Future`向前
+
+  也就是尝试执行传入的这个fut，一直到需要await的时候再将当前的fut挂起，然后执行器重调度。
+
+  上面关于waker的部分也是这样说的，说到的是只有当fut执行到一个await点的时候才涉及到waker相关的操作（也就是poll函数在驱使当前fut向前执行直到await）
+
+- 状态转换
+
+  ![image-20240531120205678](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120205678.png)
+
+  正如上面说的，poll函数是在执行当前的代码直到需要阻塞（也就是需要await）的时候才会停止。那么经过一次poll之后，状态机将转换到第一个await状态，也就是执行到第一个await之前（上图中的第一行）
+
+- 创建叶子fut
+
+  ![image-20240531120422425](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120422425.png)
+
+  这里只需要知道叶子fut是通过reactor创建的即可（相当于是在reactor中**注册了一个fut**，相当于是在操作系统中的spwan操作？**疑问**）
+
+- Reactor执行细节
+
+  ![image-20240531120652739](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120652739.png)
+
+  这里说道实际上就是将一个操作转换成了一个fut（所以就相当于是创建了一个fut，或者说注册了一个fut。正如Reactor旁边显示的伪代码一样）
+
+- await fut
+
+  ![image-20240531120822421](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120822421.png)
+
+  这里文字没有含金量，下一个
+
+- await执行细节
+
+  ![image-20240531120931173](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120931173.png)
+
+  首先先看执行器旁边的伪代码，可以发现实际上这里是一个树形的执行结构，就是先poll non leaf，等到遇到了leaf，再执行poll leaf。tip中提到的就没什么用了，就是上面说的不能直接像调用实例方法一样去调用
+
+  关于waker：这里说道在poll一个non leaf的时候，唤醒器会通过non leaf中的leaf被传递给Reactor。
+
+  这么来看的话，其实Reactor就持有了很多的Context（包含waker），用于唤醒fut；而执行器就持有了很多的fut，用于执行（poll）fut。所以正像上面所说的，执行器负责执行fut，而Reactor负责调度相关的（尤其是唤醒fut）
+
+- 存储waker细节
+
+  ![image-20240531121725048](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531121725048.png)
+
+  这里展示了leaf poll的执行细节。当执行了一个leaf poll的时候，就会给唤醒器分配一个编号，然后再将唤醒器存储在Reactor中。
+
+  从这里其实就能看出来Reactor和执行器的解耦合了。因为如果没有waker的话，Reactor就需要直接去操作执行器中的fut，然后去唤醒他们；而如果使用了waker的话就使得Reactor只需要调用自己内部的waker的方法自然就能将执行器中的fut唤醒了
+
+- poll的返回（阻塞）
+
+  ![image-20240531122536575](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531122536575.png)
+
+  如果当叶子fut需要等待的话，就会返回一个Pending，而不是在那里阻塞等待。返回Pending的时候就会将当前这个fut置入执行器的等待队列了（相当于非阻塞等待。这个时候应该用了另一个线程来执行这个被等待的fut）。
+
+  需要注意的是这里只将最外层的non leaf fut置入了等待队列，尽管实际上等待的是非叶子里面的叶子。从这里就能看出，在一个non leaf中的fut是不会异步执行的，而是串行同步执行的。因为等待队列中只会有最上层的non leaf，所以最上层的non leaf才是最小的调度对象。故内部的leaf之间不会异步执行（如果要让两个fut异步执行的话就一定要让这两个fut都是最上层的leaf了）
+
+  这里也说道执行器一般都提供了方法来创建一个最上层的叶子（正如这里所说的，很像一个spawn，只不过这里是创建了另一个异步块，而不是一个线程或者进程）
+
+- 执行器的调度
+
+  ![image-20240531134014775](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134014775.png)
+
+  当当前的fut被pending的时候，执行器就会回到就绪队列中选出一个fut来执行（不是在await状态，即被Reactor唤醒的fut）
+
+  这里说道的是如果就绪队列中没有fut的话，执行器就会休眠（所以之后一定有一个唤醒机制，这个唤醒执行器的机制应该是由Reactor来执行的）
+
+  在上图的例子中实际上就是执行器休眠的情况
+
+- Reactor的唤醒
+
+  ![image-20240531134349085](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134349085.png)
+
+  就是当一个fut执行结束了之后，Reactor就会唤醒该fut
+
+- Reactor唤醒细节
+
+  ![image-20240531134439102](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134439102.png)
+
+  也没什么，实际上就是根据保存waker时的id来获取对应的waker，然后将对应的fut唤醒
+
+- 唤醒的结果
+
+  ![image-20240531134551428](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134551428.png)
+
+  最简单直白的就是将被唤醒的fut置入就绪队列，然后执行器就发现就绪队列中有一个fut可以执行了（正如右边的文字所说的，唤醒执行器也是这个时候进行的），就接着执行该fut
+
+  这里还需要注意的一点是如果执行了wake方法的话，在Reactor中存储的waker就会被移出Reactor（因为之后的poll需要的唤醒器可能不同，所以唤醒器就好像是一次性的一样）
+
+- fut的完成
+
+  ![image-20240531134855876](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134855876.png)
+
+  在执行结束之后，poll函数返回ready，表示当前的await执行结束。poll执行结束之后状态机就会再进行一次状态转换。
+
+  如果当前的ready之后没有await了，那么就完成了当前的fut
+
+- 继续执行当前线程
+
+  ![image-20240531135126680](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531135126680.png)
+
+  之前通过block_on方法阻塞了当前线程。block结束的条件根据右边的文字猜测就是当前执行器的阻塞队列中已经没有fut了。
+
+这里总结一下，首先创建了一个异步块之后就会生成一个状态机，这个状态机的状态转换条件就是await的执行。每次执行器对就绪队列中的某个fut调用poll方法之后就会执行当前fut，然后直到下一个await（是递归的），所以每次poll都会让状态机进行一次状态转换（只不过在最外层来看可能是阻塞在同一行上的）。直到最后一个await执行结束之后对当前的fut执行poll方法，就会将该fut执行完毕，然后返回一个最终的ready，让当前的线程不再阻塞。
+
+而在这个过程中，创建fut是由Reactor执行的；执行fut是由执行器的poll方法进行的；将fut置入阻塞队列是执行器进行的；当异步信号发生时，唤醒fut是由Reactor执行的。Reactor与执行器之间通过唤醒器实现了解耦合
+
+## 四 唤醒器和上下文
+
+### Understanding the Waker
 
 有一段话：
 
@@ -283,7 +372,7 @@ let non_leaf = async {
 
 所以如果使用trait的话，胖指针和数据存放在什么位置是编译器给我们定死的。
 
-##### Fat pointers in Rust
+### Fat pointers in Rust
 
 这里有一段代码：
 
@@ -482,167 +571,11 @@ fn main() {
 
 这样子实现唤醒器的话就能够**实现将胖指针中的数据存放在栈上**，因为胖指针中的数据指针是我们自己设定的，也就是说我们能够自己实现内存的控制，决定唤醒器应该分配在栈上还是分配在堆上。
 
-## 第二周
-
-先把embassy放一放，先把两百行看完然后去看向勇老师的课程
-
-发现还是杂记比较适合我。。。
-
-### Rust Futures
-
-这里先回去补一下在中文版中缺失的章节
-
-#### Future与运行时工作模型
-
-这一章还是很有必要看的，因为能让我有一个整体的把握。后面去学唤醒器啥的也会有底。
-
-这一章主要是将伪代码和图形结合起来，来介绍Future与运行时的工作模型。
-
-下面就介绍一下异步模型的全过程
-
-- 阻塞当前线程
-
-  ![image-20240531113946000](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531113946000.png)
-
-  这里是通过执行器的block_on方法将当前线程阻塞了。意思是当等到了fut之后，当前线程才会继续执行
-
-- 生成状态机
-
-  ![image-20240531114145401](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531114145401.png)
-
-  编译器会根据async关键字和await关键字生成一个状态机（这个状态机的状态转换条件就是await事件的发生）
-
-- 执行future（也就是尝试执行传入的这个future）
-
-  ![image-20240531114303558](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531114303558.png)
-
-  这里是通过调用fut的方法来进行轮询。这里还需要传递一个唤醒器，以便这个fut能被唤醒（在等待阻塞事件的时候）。
-
-  这里说到的不能像一个实例方法一样去直接调用poll方法，是因为poll方法的函数签名如下：
-
-  ```rust
-  fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>; 
-  ```
-
-  这里的self并不是fut本身，而是要把fut包装在Pin中（所以不能直接调用实例方法）；而唤醒器也是要包装在一个Context中的（下面也提到了，这里需要一些额外的信息，来唤醒fut。就后好像是进程切换的时候的上下文一样，是fut恢复所需要的一些额外的信息）。所以这里不能这样使用non_leaf_fut.poll（waker）。
-
-  这里还提到了waker。这里的意思应该是poll函数会先把这个waker挂起，然后当这个fut到达了await点的时候，这个时候才会执行上面提到的non_leaf_fut.poll（waker）。
-
-  这个意思应该是，如果代码是非阻塞的就先不需要管这个waker了，一直执行到需要阻塞的地方了之后才会开始进行waker相关的部分。
-
-  这里再稍微提一下poll的作用：
-
-  > 在Rust中，`Future::poll`方法用于尝试驱动`Future`向前
-
-  也就是尝试执行传入的这个fut，一直到需要await的时候再将当前的fut挂起，然后执行器重调度。
-
-  上面关于waker的部分也是这样说的，说到的是只有当fut执行到一个await点的时候才涉及到waker相关的操作（也就是poll函数在驱使当前fut向前执行直到await）
-
-- 状态转换
-
-  ![image-20240531120205678](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120205678.png)
-
-  正如上面说的，poll函数是在执行当前的代码直到需要阻塞（也就是需要await）的时候才会停止。那么经过一次poll之后，状态机将转换到第一个await状态，也就是执行到第一个await之前（上图中的第一行）
-
-- 创建叶子fut
-
-  ![image-20240531120422425](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120422425.png)
-
-  这里只需要知道叶子fut是通过reactor创建的即可（相当于是在reactor中**注册了一个fut**，相当于是在操作系统中的spwan操作？**疑问**）
-
-- Reactor执行细节
-
-  ![image-20240531120652739](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120652739.png)
-
-  这里说道实际上就是将一个操作转换成了一个fut（所以就相当于是创建了一个fut，或者说注册了一个fut。正如Reactor旁边显示的伪代码一样）
-
-- await fut
-
-  ![image-20240531120822421](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120822421.png)
-
-  这里文字没有含金量，下一个
-
-- await执行细节
-
-  ![image-20240531120931173](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531120931173.png)
-
-  首先先看执行器旁边的伪代码，可以发现实际上这里是一个树形的执行结构，就是先poll non leaf，等到遇到了leaf，再执行poll leaf。tip中提到的就没什么用了，就是上面说的不能直接像调用实例方法一样去调用
-
-  关于waker：这里说道在poll一个non leaf的时候，唤醒器会通过non leaf中的leaf被传递给Reactor。
-
-  这么来看的话，其实Reactor就持有了很多的Context（包含waker），用于唤醒fut；而执行器就持有了很多的fut，用于执行（poll）fut。所以正像上面所说的，执行器负责执行fut，而Reactor负责调度相关的（尤其是唤醒fut）
-
-- 存储waker细节
-
-  ![image-20240531121725048](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531121725048.png)
-
-  这里展示了leaf poll的执行细节。当执行了一个leaf poll的时候，就会给唤醒器分配一个编号，然后再将唤醒器存储在Reactor中。
-
-  从这里其实就能看出来Reactor和执行器的解耦合了。因为如果没有waker的话，Reactor就需要直接去操作执行器中的fut，然后去唤醒他们；而如果使用了waker的话就使得Reactor只需要调用自己内部的waker的方法自然就能将执行器中的fut唤醒了
-
-- poll的返回（阻塞）
-
-  ![image-20240531122536575](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531122536575.png)
-
-  如果当叶子fut需要等待的话，就会返回一个Pending，而不是在那里阻塞等待。返回Pending的时候就会将当前这个fut置入执行器的等待队列了（相当于非阻塞等待。这个时候应该用了另一个线程来执行这个被等待的fut）。
-
-  需要注意的是这里只将最外层的non leaf fut置入了等待队列，尽管实际上等待的是非叶子里面的叶子。从这里就能看出，在一个non leaf中的fut是不会异步执行的，而是串行同步执行的。因为等待队列中只会有最上层的non leaf，所以最上层的non leaf才是最小的调度对象。故内部的leaf之间不会异步执行（如果要让两个fut异步执行的话就一定要让这两个fut都是最上层的leaf了）
-
-  这里也说道执行器一般都提供了方法来创建一个最上层的叶子（正如这里所说的，很像一个spawn，只不过这里是创建了另一个异步块，而不是一个线程或者进程）
-
-- 执行器的调度
-
-  ![image-20240531134014775](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134014775.png)
-
-  当当前的fut被pending的时候，执行器就会回到就绪队列中选出一个fut来执行（不是在await状态，即被Reactor唤醒的fut）
-
-  这里说道的是如果就绪队列中没有fut的话，执行器就会休眠（所以之后一定有一个唤醒机制，这个唤醒执行器的机制应该是由Reactor来执行的）
-
-  在上图的例子中实际上就是执行器休眠的情况
-
-- Reactor的唤醒
-
-  ![image-20240531134349085](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134349085.png)
-
-  就是当一个fut执行结束了之后，Reactor就会唤醒该fut
-
-- Reactor唤醒细节
-
-  ![image-20240531134439102](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134439102.png)
-
-  也没什么，实际上就是根据保存waker时的id来获取对应的waker，然后将对应的fut唤醒
-
-- 唤醒的结果
-
-  ![image-20240531134551428](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134551428.png)
-
-  最简单直白的就是将被唤醒的fut置入就绪队列，然后执行器就发现就绪队列中有一个fut可以执行了（正如右边的文字所说的，唤醒执行器也是这个时候进行的），就接着执行该fut
-
-  这里还需要注意的一点是如果执行了wake方法的话，在Reactor中存储的waker就会被移出Reactor（因为之后的poll需要的唤醒器可能不同，所以唤醒器就好像是一次性的一样）
-
-- fut的完成
-
-  ![image-20240531134855876](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531134855876.png)
-
-  在执行结束之后，poll函数返回ready，表示当前的await执行结束。poll执行结束之后状态机就会再进行一次状态转换。
-
-  如果当前的ready之后没有await了，那么就完成了当前的fut
-
-- 继续执行当前线程
-
-  ![image-20240531135126680](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240531135126680.png)
-
-  之前通过block_on方法阻塞了当前线程。block结束的条件根据右边的文字猜测就是当前执行器的阻塞队列中已经没有fut了。
-
-这里总结一下，首先创建了一个异步块之后就会生成一个状态机，这个状态机的状态转换条件就是await的执行。每次执行器对就绪队列中的某个fut调用poll方法之后就会执行当前fut，然后直到下一个await（是递归的），所以每次poll都会让状态机进行一次状态转换（只不过在最外层来看可能是阻塞在同一行上的）。直到最后一个await执行结束之后对当前的fut执行poll方法，就会将该fut执行完毕，然后返回一个最终的ready，让当前的线程不再阻塞。
-
-而在这个过程中，创建fut是由Reactor执行的；执行fut是由执行器的poll方法进行的；将fut置入阻塞队列是执行器进行的；当异步信号发生时，唤醒fut是由Reactor执行的。Reactor与执行器之间通过唤醒器实现了解耦合
-
-#### 五 Generators and async/await
+## 五 Generators and async/await
 
 这里有一个链接，讲的是生成器的motivation，之后有空可以看看：[The motivation for Generators](https://web.archive.org/web/20221206132735/https://github.com/rust-lang/rfcs/blob/master/text/2033-experimental-coroutines.md)
 
-##### 学习生成器的必要性
+### 学习生成器的必要性
 
 作者在这里说了，生成器与yield与async/await非常像，并且生成器比较简单，可以给出示例，所以这里介绍了生成器
 
@@ -653,7 +586,7 @@ fn main() {
   - 使用组合器
   - 没有栈的协程，也就是生成器（async也差不多。这也是现在rust中使用的机制）
 
-##### combinators
+### combinators
 
 作者说js中也有组合器，并且提供了一段rust中的组合器的代码。但是我不太会js，所以这里就不继续深究这个组合器了（反正现在rust里面使用的也不是组合器）
 
@@ -669,7 +602,7 @@ fn main() {
 
 作者在这里也说到了，使用组合器本质上跟回调差不多，这样就使得所有的函数闭包都需要存储所有的数据（这里可能指的是之前rust中的函数闭包，因为在现在的rust中，函数闭包已经能捕获环境中的变量，并且如果没有使用move关键字的话就会以引用的形式将变量传递给函数闭包）。而如果所有的闭包都需要存储该闭包所需数据的话（是数据实体而不是引用），那么就会使得内存的使用率随着代码的执行（也就是added step。每一个step都可以理解为是一个函数或者fut。在组合器模式中就是直接额外分配内存空间给新的step使用）越来越高。说白了就是上面的2、3两个缺点
 
-##### Stackless coroutines/generators
+### Stackless coroutines/generators
 
 标题的意思是：没有栈的协程/生成器（这也就是现在rust中使用的生成器，async创建的协程也是使用这种机制，所以开销很小，因为栈空间都没有了）
 
@@ -780,7 +713,7 @@ fn main() {
 
     到这里就大概能理解，如果使用了生成器（无栈协程）机制的话，需要两块空间：一个用于存储状态机（应该是分配在堆上），另一个是fut执行所需的空间。由于需要额外存储状态机，就不好说这个模式的内存占用率有多高了（但实际上状态机应该不会占用很多的内存，应该只是存储了一张图）。但是无论如何，使用生成器都有一个优点——所需的内存空间在编译之后就能确定（这里说的确定是甚至**栈空间都不会变化**。也就是**没有动态的栈分配**。组合器模式下可能需要）
 
-##### How generators work
+### How generators work
 
 - yield关键字：yield关键字的作用就是**将一个函数闭包变成了一个生成器**
 
@@ -994,7 +927,7 @@ fn main() {
   这里的borrowed指向的是本身结构体中的to_borrow，就构成了一个self-referential structs（自指结构体）
 
   到这里好像就能把这个生成器当成一个async状态机了。但是这里会出现一个问题——在安全的rust中可能会使用swap函数，也就是下面的代码：
-  
+
   ```rust
   pub fn main() {
       let mut gen = GeneratorA::start();
@@ -1014,7 +947,7 @@ fn main() {
       if let GeneratorState::Complete(()) = gen.resume() {
           ()
       };
-}
+  }
   ```
 
   运行起来之后就出现了执行gen2.resume()（这里是gen2是因为已经经过了swap了，即这个时候gen2就是gen，所以）的时候没办法打印出Hello的情况：
@@ -1024,20 +957,20 @@ fn main() {
   而且就是在print的时候跳转就出现了问题。所以大概率是因为borrowed这个引用经过swap之后出现了一点问题，导致引用变量的地址不正确了。这样就在安全的rust中引发了一个内存相关的问题，这个就与rust的设计理念背道而驰了（在安全的rust中绝对不容忍内存相关的问题，因为编译器都做了相关的检查）这里作者就埋了一个坑，说下一章会介绍为什么会出现这个问题（并且能通过Pin来解决）。
 
   这里出现问题应该是因为自指结构体，因为在gen.resume的时候，已经gen的值就变成了Yield1，而gen2的值是Enter，然后执行了swap之后，Yield1中的引用变量仍然是指向原来的位置，而原来的位置中是Enter，并没有Yield1中的字符串成员，所以会出现地址无法访问的问题。而如果把swap放在gen.resume和gen2.resume之后，这个时候就会因为两个gen都是Yield1，这个时候虽然结构体中的引用指向的还是原来的位置，但是还是能找到相应的值。
-  
+
   所以出现问题的关键就是，自指结构体在移动的时候其中的引用变量仍然指向的是原来的位置，而该位置的结构体成员变量已经随着结构体的移动被移走了。即：
-  
+
   ![image-20240601104215295](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240601104215295.png)
-  
+
   这里岔开讲一句。这里我走进swap函数发现这里的传参跟ARM的规范很像：
 
   > 1. `55555555C6CA: 48 8D 7C 24 58 leaq 0x58(%rsp), %rdi`
+
+>这条指令将栈指针（%rsp）加上偏移量（0x58）的结果加载到寄存器 %rdi 中。这通常用于准备函数调用，因为在 x86-64 架构的 System V ABI 中，%rdi 用于传递第一个参数。
 >
-  >    这条指令将栈指针（%rsp）加上偏移量（0x58）的结果加载到寄存器 %rdi 中。这通常用于准备函数调用，因为在 x86-64 架构的 System V ABI 中，%rdi 用于传递第一个参数。
+>2. `55555555C6CF: 48 8D 74 24 78 leaq 0x78(%rsp), %rsi`
 >
-  > 2. `55555555C6CF: 48 8D 74 24 78 leaq 0x78(%rsp), %rsi`
-  >
-  >    这条指令将栈指针（%rsp）加上偏移量（0x78）的结果加载到寄存器 %rsi 中。这同样可能用于准备函数调用，因为在 x86-64 架构的 System V ABI 中，%rsi 用于传递第二个参数。
+>   这条指令将栈指针（%rsp）加上偏移量（0x78）的结果加载到寄存器 %rsi 中。这同样可能用于准备函数调用，因为在 x86-64 架构的 System V ABI 中，%rsi 用于传递第二个参数。
 
   这里也是通过寄存器进行传参的。
 
@@ -1045,7 +978,7 @@ fn main() {
 
   如果解决了上面那个问题，那么就相当于是实现了一个async了。因为async本质上也是生成一个类似的状态机，并且能够跨yield点进行引用（这也是上面一直在做的事情）。
 
-##### Async and generators
+### Async and generators
 
 这一节就是在说async和生成器是很像的
 
@@ -1078,9 +1011,9 @@ fn main() {
   - 生成器的返回值为 `Yielded` or `Complete` ，而在async中返回值为 `Pending` or `Ready`. 
   - 在生成器中使用 `yield` 关键字，而在async块中使用的是`await`关键字。
 
-#### 六 Pin
+## 六 Pin
 
-##### Definitions
+### Definitions
 
 - Pin本质：Pin本质上就是一个**智能指针**，只不过能给他指向的数据提供一些保证。他用来管理实现了!Unpin的类型的一些规则（说白了就是管理!Unpin）
 
@@ -1092,7 +1025,7 @@ fn main() {
 
 作者在后面也说道了使用Unpin和!Unpin是有一定原因的，因为这个命名能体现出来一些rust语言的小细节，所以后面就继续使用!Unpin这样双重否定的名字了
 
-##### Pinning and self-referential structs
+### Pinning and self-referential structs
 
 这里作者给出了一个自指更简单的例子（我在这里面加上了一些注释）：
 
@@ -1169,7 +1102,7 @@ impl Test {
 
   跟我上面画的那张图是完全一致的
 
-##### Pinning to the stack
+### Pinning to the stack
 
 这里就开始介绍Pin了。Pin的一个重要的作用就是能解决上面的自指结构体的移动问题
 
@@ -1282,7 +1215,7 @@ std::mem::swap(&mut test1, &mut test2);
 
   这个也是非常合理的，因为在使用栈Pin的时候如果在函数退出的时候还保留Pin的话，那么这个被这个PinPin住的对象在退出栈的时候就逃逸出了当前函数（相当于是被移动了），这个时候就大概率会报错
 
-##### Pinning to the heap
+### Pinning to the heap
 
 堆Pin实际上就是将变量放在堆上然后再Pin住，所以堆pin和栈pin的唯一的区别就是在堆pin的时候需要将结构体变量同构Box分配在堆上，然后再Pin住
 
@@ -1376,7 +1309,7 @@ copilot给出的解释是：
 
 这个意思是，如果要交换堆上的数据没必要交换变量本身，只交换变量的智能指针就好了，这样并不会修改变量存储的地址，进而就不违背Pin的规则了
 
-##### Practical rules for Pinning
+### Practical rules for Pinning
 
 - If `T: Unpin` (which is the default), then `Pin<'a, T>` is entirely equivalent to `&'a mut T`. in other words: `Unpin` means it's OK for this type to be moved even when pinned, so `Pin` will have no effect on such a type.
 
@@ -1477,7 +1410,7 @@ copilot给出的解释是：
 
 还有一个自己很少用Pin的原因就是自己很少写出来自指对象（Pin的主要目的就是用于自指对象）
 
-##### Projection/structural pinning
+### Projection/structural pinning
 
 原文比较短，直接截出来：
 
@@ -1485,7 +1418,7 @@ copilot给出的解释是：
 
 这里就是在说投影和结构化pining，大致意思就是我可以对一个结构体成员Pin，这个操作就被称为结构化Pining
 
-##### Pin and Drop
+### Pin and Drop
 
 原文也比较短，这里也直接截出来：
 
@@ -1569,7 +1502,7 @@ fn resume(self: Pin<&mut Self>) -> GeneratorState<Self::Yield, Self::Return> {
 
 但无论如何，编译器都会将变量本身pin住。如果想要实现类似变量交换的操作，对堆上的数据就交换指针（也就是交换Pin<Box<T\>>中的Box），而栈上数据就只能使用unsafe块来强行修改了（也就是修改Pin<T\>中的T）
 
-#### 七 Implementing Futures
+## 七 Implementing Futures
 
 这一章主要是作者带着看明白200行是在干嘛。这章看完之后就要去自己跑一下200行了
 
@@ -1583,7 +1516,7 @@ cargo init
 
 这条指令可以将当前的文件夹初始化为一个cargo包，也就是会为我自动创建一个Cargo.toml文件，一个src目录，还有一个main.rs文件
 
-##### The Executor
+### The Executor
 
 - 执行器的功能：选一个ready（或者刚刚交给执行器的fut）的fut，然后开始poll
 
@@ -1654,7 +1587,7 @@ fn block_on<F: Future>(mut future: F) -> F::Output {
 
   > `Context` is just a wrapper around the `Waker`. At the time of writing this book it's nothing more. In the future it might be possible that the `Context` object will do more than just wrapping a `Waker` so having this extra abstraction gives some flexibility.
 
-##### The Future implementation
+### The Future implementation
 
 fut实现的代码如下：
 
@@ -1827,7 +1760,7 @@ impl Future for Task {
 
 大致意思就是任意一个线程都可以随意地获取执行器线程并调用park或者unpark方法。这种不受限制的访问很容易出现死锁（如两个线程连续对执行器线程进行park，或者连续的unpark等）
 
-##### The Reactor
+### The Reactor
 
 这个应该算是代码的最后一个部分了（上面已经实现了执行器、唤醒器、fut），也是我最想知道的一个部分，因为经过了上面的介绍之后，好像推翻了我之前的一点想法。我一直以为执行器是最重要的函数，因为他要负责执行任务。但到这里就发现，他只是简单地调用fut的poll方法，然后调用Reactor的函数接口。
 
@@ -2036,5 +1969,3 @@ impl Drop for Reactor {
 当然这里跟直接调用thread::park有什么区别我暂时还不知道，因为没有了解过thread::park，之后可以去看看。再**埋个坑**。
 
 至此，200行算是看完了。
-
-## 第三周
